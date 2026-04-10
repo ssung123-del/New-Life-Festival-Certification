@@ -1,0 +1,5 @@
+{
+  "name": "새생명축제 인증 시스템",
+  "description": "새생명축제 참석자 인증 사진 업로드 및 구글 드라이브 연동 시스템",
+  "requestFramePermissions": []
+}
