@@ -104,21 +104,34 @@ export default function App() {
           };
 
           xhr.onload = () => {
-            if (xhr.status >= 200 && xhr.status < 300) {
-              try {
-                const res = JSON.parse(xhr.responseText);
-                if (res.success) {
-                  results.push({ name: res.fileName });
-                  setUploadProgress(((i + 1) / files.length) * 100);
-                  resolve(res);
+            let res;
+            try {
+              res = JSON.parse(xhr.responseText);
+            } catch (e) {
+              // JSON 파싱 실패 (서버가 준비 중이거나 HTML 에러 페이지를 반환한 경우)
+              if (xhr.status >= 200 && xhr.status < 300) {
+                if (xhr.responseText.trim().toLowerCase().startsWith('<!doctype') || xhr.responseText.trim().toLowerCase().startsWith('<html')) {
+                  reject(new Error('서버가 준비 중이거나 일시적인 오류입니다. 잠시 후 다시 시도해주세요.'));
                 } else {
-                  reject(new Error(res.error || '업로드 실패'));
+                  reject(new Error('서버 응답을 처리할 수 없습니다.'));
                 }
-              } catch(e) {
-                reject(new Error('서버 응답을 처리할 수 없습니다.'));
+              } else {
+                reject(new Error(`서버와 통신 중 오류가 발생했습니다 (${xhr.status}).`));
+              }
+              return;
+            }
+
+            // JSON 파싱 성공
+            if (xhr.status >= 200 && xhr.status < 300) {
+              if (res.success) {
+                results.push({ name: res.fileName });
+                setUploadProgress(((i + 1) / files.length) * 100);
+                resolve(res);
+              } else {
+                reject(new Error(res.error || '업로드 실패'));
               }
             } else {
-              reject(new Error('서버와 통신 중 오류가 발생했습니다.'));
+              reject(new Error(res.error || `서버 오류가 발생했습니다 (${xhr.status}).`));
             }
           };
           
